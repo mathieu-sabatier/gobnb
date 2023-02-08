@@ -19,38 +19,49 @@ type SolverMode uint
 const (
 	DepthFirst SolverMode = iota
 	BreadthFirst
+	BestBound
+	Custom
 )
 
-var SolverModeNames = [...]string{"DepthFirst", "BreathFirst"}
+var SolverModeNames = [...]string{"DepthFirst", "BreathFirst", "BestBound", "Custom"}
 
 func (mode SolverMode) String() string {
 	return SolverModeNames[mode]
 }
 
 type SolverConfigs struct {
-	AbsoluteGap  float64
-	MaxSpentTime int64
-	Mode         SolverMode
+	AbsoluteGap      float64
+	MaxSpentTime     int64
+	Mode             SolverMode
+	customComparator utils.Comparator
 }
 
-func newComparatorFromConfig(mode SolverMode) utils.Comparator {
-	if mode == DepthFirst {
+func newComparatorFromConfig(config SolverConfigs) utils.Comparator {
+	if config.Mode == DepthFirst {
 		return func(a, b interface{}) int {
 			priorityA := a.(*Node).Depth
 			priorityB := b.(*Node).Depth
 			return -utils.IntComparator(priorityA, priorityB)
 		}
-	} else if mode == BreadthFirst {
+	} else if config.Mode == BreadthFirst {
+		return func(a, b interface{}) int {
+			priorityA := a.(*Node).Depth
+			priorityB := b.(*Node).Depth
+			return +utils.IntComparator(priorityA, priorityB)
+		}
+	} else if config.Mode == BestBound {
 		return func(a, b interface{}) int {
 			priorityA := a.(*Node).Depth
 			priorityB := b.(*Node).Depth
 			return -utils.IntComparator(priorityA, priorityB)
 		}
+	} else if config.Mode == Custom {
+		return config.customComparator
 	}
-	panic(mode)
+	panic(config.Mode)
 }
 
-func (s *Solver) Solve(config SolverConfigs) (objective float64, bound float64, err error) {
+func (s *Solver) Solve(config SolverConfigs) (bestNode *Node, objective float64, bound float64, err error) {
 
 	var bestbound, bestObjective float64
 	bestObjective = math.Inf(1)
@@ -58,7 +69,7 @@ func (s *Solver) Solve(config SolverConfigs) (objective float64, bound float64, 
 	initialNode := s.Problem.LoadInitialNode()
 	bestbound = s.Problem.Bound(initialNode)
 
-	comparator := newComparatorFromConfig(config.Mode)
+	comparator := newComparatorFromConfig(config)
 	nodes := pq.NewWith(comparator)
 
 	s.Problem.Branch(nodes, initialNode, bestbound)
@@ -84,15 +95,16 @@ func (s *Solver) Solve(config SolverConfigs) (objective float64, bound float64, 
 		}
 
 		// update bound and objective
-		if bound > bestbound {
+		if bound < bestbound {
 			bestbound = bound
 		}
 		if objective < bestObjective {
+			fmt.Println("improving objective from", bestObjective, "to", objective)
 			bestObjective = objective
-			fmt.Println("improving objective to", bestObjective)
+			bestNode = nextNode
 		}
 
 		s.Problem.Branch(nodes, nextNode, bestbound)
 	}
-	return bestObjective, bound, err
+	return bestNode, bestObjective, bound, err
 }
