@@ -1,11 +1,10 @@
-package gobnb_test
+package gobnb
 
 import (
 	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	bnb "gitlab.com/gobnb"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -28,10 +27,10 @@ func contains(s []int, e int) bool {
 	return false
 }
 
-func (s *TravellingSalespersonProblem) Sense() bnb.ProblemSense {
-	return bnb.Minimize
+func (s *TravellingSalespersonProblem) Sense() ProblemSense {
+	return Minimize
 }
-func (s *TravellingSalespersonProblem) Objective(n *bnb.Node) (bound float64) {
+func (s *TravellingSalespersonProblem) Objective(n *Node) (bound float64) {
 	state := &TravellingSalespersonProblemState{}
 	n.LoadState(state)
 
@@ -48,7 +47,7 @@ func (s *TravellingSalespersonProblem) Objective(n *bnb.Node) (bound float64) {
 	objective += distances.At(last_point, first_point)
 	return objective
 }
-func (s *TravellingSalespersonProblem) Bound(n *bnb.Node) float64 {
+func (s *TravellingSalespersonProblem) Bound(n *Node) float64 {
 	state := &TravellingSalespersonProblemState{}
 	n.LoadState(state)
 
@@ -81,12 +80,12 @@ func (s *TravellingSalespersonProblem) Bound(n *bnb.Node) float64 {
 	return state.CurrentCost + float64(nRemainingDistances)*float64(max_distance)
 }
 
-func (s *TravellingSalespersonProblem) LoadInitialNode() *bnb.Node {
-	initialNode := &bnb.Node{State: TravellingSalespersonProblemState{Sequence: []int{0}}}
+func (s *TravellingSalespersonProblem) LoadInitialNode() *Node {
+	initialNode := &Node{State: TravellingSalespersonProblemState{Sequence: []int{0}}}
 	return initialNode
 }
 
-func (s *TravellingSalespersonProblem) Branch(n *bnb.Node, currentBound float64) []*bnb.Node {
+func (s *TravellingSalespersonProblem) Branch(n *Node, currentBound float64) []*Node {
 	state := &TravellingSalespersonProblemState{}
 	n.LoadState(state)
 	distances := s.DistanceMatrix
@@ -94,7 +93,7 @@ func (s *TravellingSalespersonProblem) Branch(n *bnb.Node, currentBound float64)
 	activeSequence := state.Sequence
 	lastPassage := state.Sequence[len(activeSequence)-1]
 
-	var nextNodes []*bnb.Node
+	var nextNodes []*Node
 	for passage := 0; passage < s.NSalesman; passage++ {
 		if contains(activeSequence, passage) {
 			continue
@@ -104,7 +103,7 @@ func (s *TravellingSalespersonProblem) Branch(n *bnb.Node, currentBound float64)
 		_ = copy(newSequence, activeSequence)
 		newSequence[len(activeSequence)] = passage
 
-		newNode := &bnb.Node{
+		newNode := &Node{
 			State: TravellingSalespersonProblemState{
 				Sequence:    newSequence,
 				CurrentCost: state.CurrentCost + distances.At(lastPassage, passage),
@@ -130,8 +129,8 @@ func TestSolverTSP(t *testing.T) {
 		NSalesman:      distances.RawMatrix().Rows,
 	}
 
-	solver := bnb.Solver{tsp}
-	solution, _, _, err := solver.Solve(bnb.SolverConfigs{Mode: bnb.DepthFirst})
+	solver := Solver{tsp}
+	solution, _, _, err := solver.Solve(SolverConfigs{Mode: DepthFirst})
 	assert.NoError(t, err, "Solver should not raise error")
 
 	bestState := &TravellingSalespersonProblemState{}
@@ -151,8 +150,8 @@ func TestSolverTSP(t *testing.T) {
 		NSalesman:      distances.RawMatrix().Rows,
 	}
 
-	solver = bnb.Solver{tsp}
-	solution, _, _, _ = solver.Solve(bnb.SolverConfigs{Mode: bnb.DepthFirst})
+	solver = Solver{tsp}
+	solution, _, _, _ = solver.Solve(SolverConfigs{Mode: DepthFirst})
 	solution.LoadState(bestState)
 	assert.Equal(t, []int{0, 2, 1, 3}, bestState.Sequence, "should be 0/1/2/3 as best path")
 }
