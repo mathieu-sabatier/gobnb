@@ -77,7 +77,7 @@ func TestSolver(t *testing.T) {
 		},
 	}
 
-	solver := bnb.Solver{simpleProblem, nil, nil}
+	solver := bnb.Solver{simpleProblem}
 	_, _, bound, err := solver.Solve(bnb.SolverConfigs{Mode: bnb.DepthFirst})
 	assert.NoError(t, err, "Solver should not raise error")
 	assert.LessOrEqual(t, bound, math.Pow10(-6), "Bound to target reached a 10-6")

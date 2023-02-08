@@ -130,7 +130,7 @@ func TestSolverTSP(t *testing.T) {
 		NSalesman:      distances.RawMatrix().Rows,
 	}
 
-	solver := bnb.Solver{tsp, nil, nil}
+	solver := bnb.Solver{tsp}
 	solution, _, _, err := solver.Solve(bnb.SolverConfigs{Mode: bnb.DepthFirst})
 	assert.NoError(t, err, "Solver should not raise error")
 
@@ -151,7 +151,7 @@ func TestSolverTSP(t *testing.T) {
 		NSalesman:      distances.RawMatrix().Rows,
 	}
 
-	solver = bnb.Solver{tsp, nil, nil}
+	solver = bnb.Solver{tsp}
 	solution, _, _, _ = solver.Solve(bnb.SolverConfigs{Mode: bnb.DepthFirst})
 	solution.LoadState(solution.State, bestState)
 	assert.Equal(t, []int{0, 2, 1, 3}, bestState.Sequence, "should be 0/1/2/3 as best path")
