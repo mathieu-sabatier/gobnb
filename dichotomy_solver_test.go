@@ -4,7 +4,6 @@ import (
 	"math"
 	"testing"
 
-	pq "github.com/emirpasic/gods/queues/priorityqueue"
 	"github.com/stretchr/testify/assert"
 	bnb "gitlab.com/gobnb"
 )
@@ -24,14 +23,14 @@ func (s *SimpleProblem) Sense() bnb.ProblemSense {
 }
 func (s *SimpleProblem) Objective(n *bnb.Node) (bound float64) {
 	state := &SimpleProblemState{}
-	n.LoadState(n.State, state)
+	n.LoadState(state)
 
 	u, l := state.UpperBound, state.LowerBound
 	return u - l
 }
 func (s *SimpleProblem) Bound(n *bnb.Node) float64 {
 	state := &SimpleProblemState{}
-	n.LoadState(n.State, state)
+	n.LoadState(state)
 
 	u, l := state.UpperBound, state.LowerBound
 	return math.Pow(l-u, 2)
@@ -39,34 +38,35 @@ func (s *SimpleProblem) Bound(n *bnb.Node) float64 {
 
 func (s *SimpleProblem) LoadInitialNode() *bnb.Node {
 	upper, lower := s.InitialState.UpperBound, s.InitialState.LowerBound
-	initialNode := &bnb.Node{State: SimpleProblemState{UpperBound: upper, LowerBound: lower}, Depth: 1}
+	initialNode := &bnb.Node{State: SimpleProblemState{UpperBound: upper, LowerBound: lower}}
 	return initialNode
 }
 
-func (s *SimpleProblem) Branch(q *pq.Queue, n *bnb.Node, currentBound float64) error {
+func (s *SimpleProblem) Branch(n *bnb.Node, currentBound float64) []*bnb.Node {
 	state := &SimpleProblemState{}
-	n.LoadState(n.State, state)
+	n.LoadState(state)
 
 	upper, lower := state.UpperBound, state.LowerBound
 	mean := (lower + upper) / 2
 
 	// possibly generate go coroutine to generate new state in a
 	// parallel way
+	var newNodes []*bnb.Node
 
 	lowerState := SimpleProblemState{LowerBound: lower, UpperBound: mean}
-	lowerNode := &bnb.Node{State: lowerState, Parent: n, Depth: n.Depth + 1}
+	lowerNode := &bnb.Node{State: lowerState}
 
 	if s.Bound(lowerNode) <= currentBound {
-		q.Enqueue(lowerNode)
+		newNodes = append(newNodes, lowerNode)
 	}
 
 	upperState := SimpleProblemState{LowerBound: mean, UpperBound: upper}
-	upperNode := &bnb.Node{State: upperState, Parent: n, Depth: n.Depth + 1}
+	upperNode := &bnb.Node{State: upperState}
 	if s.Bound(upperNode) <= currentBound {
-		q.Enqueue(upperNode)
+		newNodes = append(newNodes, upperNode)
 	}
 
-	return nil
+	return newNodes
 }
 
 func TestSolver(t *testing.T) {

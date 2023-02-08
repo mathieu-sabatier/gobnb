@@ -17,12 +17,18 @@ func (s *Solver) Solve(config SolverConfigs) (bestNode *Node, objective float64,
 	bestObjective = math.Inf(1)
 
 	initialNode := s.Problem.LoadInitialNode()
+	initialNode = initialNode.iter(initialNode)
+
 	bestbound = s.Problem.Bound(initialNode)
 
 	comparator := newComparatorFromConfig(config)
 	nodes := pq.NewWith(comparator)
 
-	s.Problem.Branch(nodes, initialNode, bestbound)
+	newNodes := s.Problem.Branch(initialNode, bestbound)
+	for _, node := range newNodes {
+		node = node.iter(node)
+		nodes.Enqueue(node)
+	}
 
 	termination := 0
 	for termination <= 100 {
@@ -54,7 +60,11 @@ func (s *Solver) Solve(config SolverConfigs) (bestNode *Node, objective float64,
 			bestNode = nextNode
 		}
 
-		s.Problem.Branch(nodes, nextNode, bestbound)
+		newNodes := s.Problem.Branch(nextNode, bestbound)
+		for _, node := range newNodes {
+			node = nextNode.iter(node)
+			nodes.Enqueue(node)
+		}
 	}
 	return bestNode, bestObjective, bound, err
 }

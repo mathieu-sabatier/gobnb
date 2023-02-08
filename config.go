@@ -27,20 +27,20 @@ type SolverConfigs struct {
 func newComparatorFromConfig(config SolverConfigs) utils.Comparator {
 	if config.Mode == DepthFirst {
 		return func(a, b interface{}) int {
-			priorityA := a.(*Node).Depth
-			priorityB := b.(*Node).Depth
+			priorityA := a.(*Node).depth
+			priorityB := b.(*Node).depth
 			return -utils.IntComparator(priorityA, priorityB)
 		}
 	} else if config.Mode == BreadthFirst {
 		return func(a, b interface{}) int {
-			priorityA := a.(*Node).Depth
-			priorityB := b.(*Node).Depth
+			priorityA := a.(*Node).depth
+			priorityB := b.(*Node).depth
 			return +utils.IntComparator(priorityA, priorityB)
 		}
 	} else if config.Mode == BestBound {
 		return func(a, b interface{}) int {
-			priorityA := a.(*Node).Depth
-			priorityB := b.(*Node).Depth
+			priorityA := a.(*Node).depth
+			priorityB := b.(*Node).depth
 			return -utils.IntComparator(priorityA, priorityB)
 		}
 	} else if config.Mode == Custom {

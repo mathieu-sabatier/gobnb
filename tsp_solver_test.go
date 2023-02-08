@@ -4,7 +4,6 @@ import (
 	"math"
 	"testing"
 
-	pq "github.com/emirpasic/gods/queues/priorityqueue"
 	"github.com/stretchr/testify/assert"
 	bnb "gitlab.com/gobnb"
 	"gonum.org/v1/gonum/mat"
@@ -34,22 +33,24 @@ func (s *TravellingSalespersonProblem) Sense() bnb.ProblemSense {
 }
 func (s *TravellingSalespersonProblem) Objective(n *bnb.Node) (bound float64) {
 	state := &TravellingSalespersonProblemState{}
-	n.LoadState(n.State, state)
+	n.LoadState(state)
 
-	if n.Depth != s.NSalesman {
+	depth := len(state.Sequence)
+
+	if depth != s.NSalesman {
 		return math.Inf(1)
 	}
 
 	// compute distances
 	distances := s.DistanceMatrix
 	objective := state.CurrentCost
-	first_point, last_point := state.Sequence[0], state.Sequence[n.Depth-1]
+	first_point, last_point := state.Sequence[0], state.Sequence[depth-1]
 	objective += distances.At(last_point, first_point)
 	return objective
 }
 func (s *TravellingSalespersonProblem) Bound(n *bnb.Node) float64 {
 	state := &TravellingSalespersonProblemState{}
-	n.LoadState(n.State, state)
+	n.LoadState(state)
 
 	if len(state.Sequence) == 1 {
 		return math.Inf(1)
@@ -81,18 +82,19 @@ func (s *TravellingSalespersonProblem) Bound(n *bnb.Node) float64 {
 }
 
 func (s *TravellingSalespersonProblem) LoadInitialNode() *bnb.Node {
-	initialNode := &bnb.Node{State: TravellingSalespersonProblemState{Sequence: []int{0}}, Depth: 1}
+	initialNode := &bnb.Node{State: TravellingSalespersonProblemState{Sequence: []int{0}}}
 	return initialNode
 }
 
-func (s *TravellingSalespersonProblem) Branch(q *pq.Queue, n *bnb.Node, currentBound float64) error {
+func (s *TravellingSalespersonProblem) Branch(n *bnb.Node, currentBound float64) []*bnb.Node {
 	state := &TravellingSalespersonProblemState{}
-	n.LoadState(n.State, state)
+	n.LoadState(state)
 	distances := s.DistanceMatrix
 
 	activeSequence := state.Sequence
 	lastPassage := state.Sequence[len(activeSequence)-1]
 
+	var nextNodes []*bnb.Node
 	for passage := 0; passage < s.NSalesman; passage++ {
 		if contains(activeSequence, passage) {
 			continue
@@ -107,15 +109,13 @@ func (s *TravellingSalespersonProblem) Branch(q *pq.Queue, n *bnb.Node, currentB
 				Sequence:    newSequence,
 				CurrentCost: state.CurrentCost + distances.At(lastPassage, passage),
 			},
-			Depth:  n.Depth + 1,
-			Parent: n,
 		}
 		if s.Bound(newNode) <= currentBound {
-			q.Enqueue(newNode)
+			nextNodes = append(nextNodes, newNode)
 		}
 	}
 
-	return nil
+	return nextNodes
 }
 
 func TestSolverTSP(t *testing.T) {
@@ -135,7 +135,7 @@ func TestSolverTSP(t *testing.T) {
 	assert.NoError(t, err, "Solver should not raise error")
 
 	bestState := &TravellingSalespersonProblemState{}
-	solution.LoadState(solution.State, bestState)
+	solution.LoadState(bestState)
 
 	assert.Equal(t, []int{0, 1, 2, 3}, bestState.Sequence, "should be 0/1/2/3 as best path")
 
@@ -153,6 +153,6 @@ func TestSolverTSP(t *testing.T) {
 
 	solver = bnb.Solver{tsp}
 	solution, _, _, _ = solver.Solve(bnb.SolverConfigs{Mode: bnb.DepthFirst})
-	solution.LoadState(solution.State, bestState)
+	solution.LoadState(bestState)
 	assert.Equal(t, []int{0, 2, 1, 3}, bestState.Sequence, "should be 0/1/2/3 as best path")
 }

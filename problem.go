@@ -2,8 +2,6 @@ package gobnb
 
 import (
 	"encoding/json"
-
-	pq "github.com/emirpasic/gods/queues/priorityqueue"
 )
 
 type ProblemSense string
@@ -15,22 +13,32 @@ const (
 
 type Node struct {
 	State  any
-	Depth  int
-	Parent *Node
+	depth  int
+	parent *Node
 }
 
-func (*Node) LoadState(a, b interface{}) error {
-	js, err := json.Marshal(a)
+func (n *Node) LoadState(target interface{}) error {
+	js, err := json.Marshal(n.State)
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(js, b)
+	return json.Unmarshal(js, target)
+}
+
+func (n *Node) iter(nextNode *Node) *Node {
+	if n.parent == nil {
+		n.depth = 1
+	} else {
+		n.depth = n.parent.depth + 1
+	}
+	nextNode.parent = n
+	return nextNode
 }
 
 type Problem interface {
 	Sense() ProblemSense
 	Objective(*Node) float64
 	Bound(*Node) float64
-	Branch(*pq.Queue, *Node, float64) error
+	Branch(*Node, float64) []*Node
 	LoadInitialNode() *Node
 }
