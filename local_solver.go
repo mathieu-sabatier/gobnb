@@ -11,7 +11,7 @@ type Solver struct {
 	Problem Problem
 }
 
-func (s *Solver) Solve(config SolverConfigs) (bestNode *Node, objective float64, bound float64, err error) {
+func (s *Solver) Solve(config *SolverConfigs) (bestNode *Node, objective float64, bound float64, err error) {
 
 	var bestbound, bestObjective float64
 	bestObjective = math.Inf(1)
@@ -30,25 +30,22 @@ func (s *Solver) Solve(config SolverConfigs) (bestNode *Node, objective float64,
 		nodes.Enqueue(node)
 	}
 
-	termination := 0
-	for termination <= 100 {
-		termination += 1
+	if nodes.Size() == 0 {
+		fmt.Println("could not find initial node")
+		fmt.Println("early stop")
+		return
+	}
 
-		n, ok := nodes.Dequeue()
-		if !ok {
-			fmt.Println("queue is empty after", termination, "iteration.")
+	checker := NewConvergenceCheckerFromConfig(config)
+	for {
+		n, optimalReached := nodes.Dequeue()
+		if !optimalReached {
+			fmt.Println("optimality condition reached - no more nodes.")
 			break
 		}
 
 		nextNode := n.(*Node)
 		bound, objective = s.Problem.Bound(nextNode), s.Problem.Objective(nextNode)
-
-		// check if termination is reached
-		if math.Abs(bound) <= math.Pow10(-6) {
-			fmt.Println("early stop: bound condition reached after", termination, "iteration.")
-			fmt.Println("current bound: ", bound)
-			break
-		}
 
 		// update bound and objective
 		if bound < bestbound {
@@ -60,11 +57,19 @@ func (s *Solver) Solve(config SolverConfigs) (bestNode *Node, objective float64,
 			bestNode = nextNode
 		}
 
+		convergenceReached := checker.Iter(bound, objective)
+		if convergenceReached {
+			fmt.Println("external convergence reached.")
+			fmt.Println("stopping from" + checker.convergenceMode)
+			break
+		}
+
 		newNodes := s.Problem.Branch(nextNode, bestbound)
 		for _, node := range newNodes {
 			node = nextNode.iter(node)
 			nodes.Enqueue(node)
 		}
+
 	}
 	return bestNode, bestObjective, bound, err
 }

@@ -77,7 +77,7 @@ func TestSolver(t *testing.T) {
 	}
 
 	solver := Solver{simpleProblem}
-	_, _, bound, err := solver.Solve(SolverConfigs{Mode: DepthFirst})
+	_, _, bound, err := solver.Solve(&SolverConfigs{Mode: DepthFirst, MaxIterCount: 100})
 	assert.NoError(t, err, "Solver should not raise error")
 	assert.LessOrEqual(t, bound, math.Pow10(-6), "Bound to target reached a 10-6")
 }

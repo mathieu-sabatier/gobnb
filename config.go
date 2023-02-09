@@ -18,13 +18,14 @@ func (mode SolverMode) String() string {
 }
 
 type SolverConfigs struct {
-	AbsoluteGap      float64
-	MaxSpentTime     int64
+	MaxDeltaBound    float64
+	MaxDuration      int
+	MaxIterCount     int
 	Mode             SolverMode
 	customComparator utils.Comparator
 }
 
-func newComparatorFromConfig(config SolverConfigs) utils.Comparator {
+func newComparatorFromConfig(config *SolverConfigs) utils.Comparator {
 	if config.Mode == DepthFirst {
 		return func(a, b interface{}) int {
 			priorityA := a.(*Node).depth

@@ -130,7 +130,7 @@ func TestSolverTSP(t *testing.T) {
 	}
 
 	solver := Solver{tsp}
-	solution, _, _, err := solver.Solve(SolverConfigs{Mode: DepthFirst})
+	solution, _, _, err := solver.Solve(&SolverConfigs{Mode: DepthFirst, MaxIterCount: 100})
 	assert.NoError(t, err, "Solver should not raise error")
 
 	bestState := &TravellingSalespersonProblemState{}
@@ -151,7 +151,7 @@ func TestSolverTSP(t *testing.T) {
 	}
 
 	solver = Solver{tsp}
-	solution, _, _, _ = solver.Solve(SolverConfigs{Mode: DepthFirst})
+	solution, _, _, _ = solver.Solve(&SolverConfigs{Mode: DepthFirst, MaxIterCount: 100})
 	solution.LoadState(bestState)
 	assert.Equal(t, []int{0, 2, 1, 3}, bestState.Sequence, "should be 0/1/2/3 as best path")
 }
