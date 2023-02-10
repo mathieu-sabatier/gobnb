@@ -41,7 +41,7 @@ func (s *SimpleProblem) LoadInitialNode() *Node {
 	return initialNode
 }
 
-func (s *SimpleProblem) Branch(n *Node, currentBound float64) []*Node {
+func (s *SimpleProblem) Branch(n *Node, currentBound float64, bestObjective float64) []*Node {
 	state := &SimpleProblemState{}
 	n.LoadState(state)
 

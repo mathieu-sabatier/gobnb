@@ -26,12 +26,8 @@ func (n *Node) LoadState(target interface{}) error {
 }
 
 func (n *Node) iter(nextNode *Node) *Node {
-	if n.parent == nil {
-		n.depth = 1
-	} else {
-		n.depth = n.parent.depth + 1
-	}
 	nextNode.parent = n
+	nextNode.depth = nextNode.parent.depth + 1
 	return nextNode
 }
 
@@ -39,6 +35,6 @@ type Problem interface {
 	Sense() ProblemSense
 	Objective(*Node) float64
 	Bound(*Node) float64
-	Branch(*Node, float64) []*Node
+	Branch(*Node, float64, float64) []*Node
 	LoadInitialNode() *Node
 }
