@@ -34,7 +34,8 @@ func (s *Solver) Solve(config *SolverConfigs) (bestNode *Node, objective float64
 		return
 	}
 
-	checker := NewConvergenceCheckerFromConfig(config)
+	stats := newStatsWriterFromConfig(config)
+	checker := newConvergenceCheckerFromConfig(config)
 	for {
 		n, optimalReached := nodes.Dequeue()
 		if !optimalReached {
@@ -45,20 +46,20 @@ func (s *Solver) Solve(config *SolverConfigs) (bestNode *Node, objective float64
 		nextNode := n.(*Node)
 		bound, objective = s.Problem.Bound(nextNode), s.Problem.Objective(nextNode)
 
-		// update bound and objective
+		// update bound if objective is reached or when first objective is reached
 		if ((bound < bestbound) && (!math.IsInf(objective, +1))) || ((math.IsInf(bestObjective, +1)) && (!math.IsInf(objective, +1))) {
 			bestbound = bound
 		}
 		if objective < bestObjective {
-			fmt.Println("improving objective from", bestObjective, "to", objective)
 			bestObjective = objective
 			bestNode = nextNode
+			stats.inform(nodes.Size(), bestObjective, bound)
 		}
 
-		convergenceReached := checker.Iter(bound, objective)
+		convergenceReached := checker.iter(bound, objective)
 		if convergenceReached {
 			fmt.Println("external convergence reached.")
-			fmt.Println("stopping from" + checker.convergenceMode)
+			fmt.Println("stopping from", checker.convergenceMode)
 			break
 		}
 
@@ -67,7 +68,8 @@ func (s *Solver) Solve(config *SolverConfigs) (bestNode *Node, objective float64
 			node = nextNode.iter(node)
 			nodes.Enqueue(node)
 		}
-
+		stats.iter(nodes.Size(), bestObjective, bestbound)
 	}
+	stats.terminate()
 	return bestNode, bestObjective, bound, err
 }

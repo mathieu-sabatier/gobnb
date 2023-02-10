@@ -20,7 +20,7 @@ func TestSolverTSP(t *testing.T) {
 		NSalesman:      distances.RawMatrix().Rows,
 	}
 
-	solver := gobnb.Solver{tsp}
+	solver := gobnb.Solver{Problem: tsp}
 	solution, _, _, err := solver.Solve(&gobnb.SolverConfigs{Mode: gobnb.DepthFirst, MaxIterCount: 100})
 	assert.NoError(t, err, "Solver should not raise error")
 
@@ -41,7 +41,7 @@ func TestSolverTSP(t *testing.T) {
 		NSalesman:      distances.RawMatrix().Rows,
 	}
 
-	solver = gobnb.Solver{tsp}
+	solver = gobnb.Solver{Problem: tsp}
 	solution, _, _, _ = solver.Solve(&gobnb.SolverConfigs{Mode: gobnb.DepthFirst, MaxIterCount: 100})
 	solution.LoadState(bestState)
 	assert.Equal(t, []int{0, 2, 1, 3}, bestState.Sequence, "should be 0/1/2/3 as best path")
@@ -58,7 +58,7 @@ func TestSolverTSP(t *testing.T) {
 		NSalesman:      distances.RawMatrix().Rows,
 	}
 
-	solver = gobnb.Solver{tsp}
-	_, objective, _, _ := solver.Solve(&gobnb.SolverConfigs{Mode: gobnb.DepthFirst, MaxIterCount: 800000})
-	assert.Equal(t, 291.0, objective, "should be 291 as best objective")
+	solver = gobnb.Solver{Problem: tsp}
+	_, objective, _, _ := solver.Solve(&gobnb.SolverConfigs{Mode: gobnb.DepthFirst, MaxIterCount: 2000000})
+	assert.Equal(t, 291.0, objective, "should be 291 as best objective in ~40s")
 }

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type ConvergenceChecker struct {
+type convergenceChecker struct {
 	maxDeltaBound   *float64
 	maxIterCount    *int
 	maxDuration     *int // duration in seconds
@@ -14,7 +14,7 @@ type ConvergenceChecker struct {
 	convergenceMode string
 }
 
-func NewConvergenceCheckerFromConfig(config *SolverConfigs) *ConvergenceChecker {
+func newConvergenceCheckerFromConfig(config *SolverConfigs) *convergenceChecker {
 	var maxDeltaBound *float64
 	var maxIterCount, maxDuration *int
 	if config.MaxDuration > 0 {
@@ -26,7 +26,7 @@ func NewConvergenceCheckerFromConfig(config *SolverConfigs) *ConvergenceChecker 
 	if config.MaxDeltaBound > 0 {
 		maxDeltaBound = &config.MaxDeltaBound
 	}
-	return &ConvergenceChecker{
+	return &convergenceChecker{
 		iterCount:     1,
 		startedAt:     time.Now(),
 		maxDuration:   maxDuration,
@@ -35,7 +35,7 @@ func NewConvergenceCheckerFromConfig(config *SolverConfigs) *ConvergenceChecker 
 	}
 }
 
-func (c *ConvergenceChecker) Iter(currentBound float64, currentObjective float64) bool {
+func (c *convergenceChecker) iter(currentBound float64, currentObjective float64) bool {
 	c.iterCount += 1
 
 	// stop if iter count reached

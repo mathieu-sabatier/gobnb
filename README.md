@@ -58,6 +58,6 @@ solution, _, _, _ = solver.Solve(&SolverConfigs{Mode: DepthFirst, MaxIterCount:1
 ## TO DO
 
 - [ ] Badge & Coverage
-- [ ] Statistics outputs
+- [X] Statistics outputs
 - [ ] MPI implementation
 - [ ] Benchmark for TSP

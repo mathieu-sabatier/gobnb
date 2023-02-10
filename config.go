@@ -22,6 +22,7 @@ type SolverConfigs struct {
 	MaxDuration      int
 	MaxIterCount     int
 	Mode             SolverMode
+	PrintStatsEvery  int
 	customComparator utils.Comparator
 }
 
