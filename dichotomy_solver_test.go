@@ -68,7 +68,7 @@ func (s *SimpleProblem) Branch(n *Node, currentBound float64, bestObjective floa
 	return newNodes
 }
 
-func TestSolver(t *testing.T) {
+func TestSingleThreadSolver(t *testing.T) {
 	simpleProblem := &SimpleProblem{
 		InitialState: SimpleProblemState{
 			LowerBound: 0.0,
@@ -76,7 +76,7 @@ func TestSolver(t *testing.T) {
 		},
 	}
 
-	solver := Solver{simpleProblem}
+	solver := SingleThreadSolver{simpleProblem}
 	_, _, bound, err := solver.Solve(&SolverConfigs{Mode: DepthFirst, MaxIterCount: 100})
 	assert.NoError(t, err, "Solver should not raise error")
 	assert.LessOrEqual(t, bound, math.Pow10(-6), "Bound to target reached a 10-6")

@@ -41,7 +41,7 @@ func (w *statsWriter) iter(nodeCount int, bestObjective float64, bestBound float
 	if (w.iterCount % *w.printEvery) == 0 {
 		now := time.Now()
 		elapsedTime := now.Sub(w.startedAt).Seconds()
-		fmt.Fprintln(w.writer, w.iterCount, "\t", nodeCount, "\t", bestObjective, "\t", bestBound, "\t", roundFloat(elapsedTime, 2), "\t", roundFloat(float64(w.iterCount)/elapsedTime, 2), "\t")
+		fmt.Fprintln(w.writer, w.iterCount, "\t", nodeCount, "\t", roundFloat(bestObjective, 4), "\t", roundFloat(bestBound, 4), "\t", roundFloat(elapsedTime, 2), "\t", roundFloat(float64(w.iterCount)/elapsedTime, 2), "\t")
 	}
 	w.writer.Flush()
 }
@@ -50,7 +50,10 @@ func (w *statsWriter) inform(nodeCount int, bestObjective float64, bestBound flo
 	now := time.Now()
 	elapsedTime := now.Sub(w.startedAt).Seconds()
 	fmt.Fprintln(w.writer, "*", w.iterCount, "\t", nodeCount, "\t", bestObjective, "\t", bestBound, "\t", roundFloat(elapsedTime, 2), "\t", roundFloat(float64(w.iterCount)/elapsedTime, 2), "\t")
-	w.writer.Flush()
+	err := w.writer.Flush()
+	if err != nil {
+		fmt.Println("Error", err)
+	}
 }
 
 func (w *statsWriter) terminate() {

@@ -7,11 +7,11 @@ import (
 	pq "github.com/emirpasic/gods/queues/priorityqueue"
 )
 
-type Solver struct {
+type SingleThreadSolver struct {
 	Problem Problem
 }
 
-func (s *Solver) Solve(config *SolverConfigs) (bestNode *Node, objective float64, bound float64, err error) {
+func (s *SingleThreadSolver) Solve(config *SolverConfigs) (bestNode *Node, objective float64, bound float64, err error) {
 
 	var bestbound, bestObjective float64
 	bestObjective = math.Inf(1)
@@ -45,6 +45,9 @@ func (s *Solver) Solve(config *SolverConfigs) (bestNode *Node, objective float64
 
 		nextNode := n.(*Node)
 		bound, objective = s.Problem.Bound(nextNode), s.Problem.Objective(nextNode)
+		if objective < bound {
+			fmt.Println("ERROR - objective lower than bound")
+		}
 
 		// update bound if objective is reached or when first objective is reached
 		if ((bound < bestbound) && (!math.IsInf(objective, +1))) || ((math.IsInf(bestObjective, +1)) && (!math.IsInf(objective, +1))) {
@@ -63,10 +66,15 @@ func (s *Solver) Solve(config *SolverConfigs) (bestNode *Node, objective float64
 			break
 		}
 
-		newNodes := s.Problem.Branch(nextNode, bestbound, bestObjective)
-		for _, node := range newNodes {
-			node = nextNode.iter(node)
-			nodes.Enqueue(node)
+		// branch when bound indicates better branch
+		if (bound <= bestObjective) && (!math.IsInf(bestObjective, +1)) || (math.IsInf(bestObjective, +1)) {
+			newNodes := s.Problem.Branch(nextNode, bestbound, bestObjective)
+			for _, node := range newNodes {
+				node = nextNode.iter(node)
+				nodes.Enqueue(node)
+			}
+		} else {
+			fmt.Println("\tCutting tree for bound", bound)
 		}
 		stats.iter(nodes.Size(), bestObjective, bestbound)
 	}
